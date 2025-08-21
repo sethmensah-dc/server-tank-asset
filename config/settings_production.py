@@ -21,10 +21,7 @@ DEBUG = False
 
 # Add your domain names here
 ALLOWED_HOSTS = [
-    'your-domain.com',
-    'www.your-domain.com',
-    'api.your-domain.com',
-    # Add your production domain(s) here
+    "server-tank-asset.onrender.com",
 ]
 
 # Application definition
