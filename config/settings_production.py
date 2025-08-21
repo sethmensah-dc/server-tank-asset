@@ -202,52 +202,29 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Logging Configuration
+import os
+
+# Simple console-only logging for production
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        },
         'console': {
-            'level': 'ERROR',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
         },
     },
     'root': {
-        'handlers': ['file', 'console'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'core': {
-            'handlers': ['file', 'console'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
-
 # Cache Configuration (Redis recommended for production)
 CACHES = {
     'default': {
