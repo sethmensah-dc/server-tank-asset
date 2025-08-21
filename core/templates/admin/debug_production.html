@@ -1,0 +1,114 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Production Debug{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:core_asset_changelist' %}">Assets</a>
+    &rsaquo; Production Debug
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>🔍 Production Debug Report</h1>
+
+<div class="module aligned">
+    <h2>System Health Check</h2>
+    
+    <table class="debug-table">
+        <thead>
+            <tr>
+                <th>Test</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test_name, details in debug_results %}
+            <tr>
+                <td>{{ test_name }}</td>
+                <td colspan="2">{{ details }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="module">
+    <h2>Next Steps</h2>
+    <ol>
+        <li><strong>Check Logs:</strong> Look at <code>/tmp/django_debug.log</code> for detailed error messages</li>
+        <li><strong>Try Command Line:</strong> Run <code>python manage.py debug_production</code> on the server</li>
+        <li><strong>Check File Permissions:</strong> Ensure Django can write to <code>/tmp/</code> directory</li>
+        <li><strong>Verify Database:</strong> Make sure PostgreSQL connection is working</li>
+        <li><strong>Upload Size:</strong> Check if your ZIP file is under 100MB</li>
+    </ol>
+</div>
+
+<div class="module">
+    <h2>Alternative Import Methods</h2>
+    
+    <h3>Method 1: Command Line Import</h3>
+    <pre><code># Upload ZIP to server, then extract and run:
+cd /path/to/django/
+unzip production_data_export_v2_FIXED.zip
+python manage.py import_from_csv --csv-dir ./ --clear-existing</code></pre>
+    
+    <h3>Method 2: Individual CSV Upload</h3>
+    <p>Try uploading just one CSV file at a time using the "Upload CSV" function instead of the full ZIP.</p>
+    
+    <h3>Method 3: Database Direct Import</h3>
+    <p>If all else fails, import directly into PostgreSQL using SQL commands.</p>
+</div>
+
+<style>
+.module {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+    padding: 20px;
+}
+
+.module h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.debug-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.debug-table th,
+.debug-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.debug-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+code {
+    background: #f4f4f4;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-family: monospace;
+}
+</style>
+{% endblock %}

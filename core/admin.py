@@ -78,6 +78,11 @@ class AssetAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.data_management),
                 name='core_asset_data_management',
             ),
+            path(
+                'debug-production/',
+                self.admin_site.admin_view(self.debug_production),
+                name='core_asset_debug_production',
+            ),
         ]
         return custom_urls + urls
 
@@ -197,6 +202,54 @@ class AssetAdmin(admin.ModelAdmin):
                 messages.error(request, f'Error importing data: {str(e)}')
         
         return redirect("admin:core_asset_data_management")
+
+    def debug_production(self, request):
+        """Debug production environment issues"""
+        import traceback
+        from django.db import connection
+        
+        debug_results = []
+        
+        # Test 1: Database Connection
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM core_company")
+                count = cursor.fetchone()[0]
+                debug_results.append(('✅ Database Connection', f'Companies: {count}'))
+        except Exception as e:
+            debug_results.append(('❌ Database Connection', str(e)))
+        
+        # Test 2: File Permissions
+        try:
+            import tempfile
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file.write(b'test')
+            temp_file.close()
+            os.unlink(temp_file.name)
+            debug_results.append(('✅ File Permissions', 'Can create temp files'))
+        except Exception as e:
+            debug_results.append(('❌ File Permissions', str(e)))
+        
+        # Test 3: Settings Check
+        try:
+            from django.conf import settings
+            file_limit = getattr(settings, 'FILE_UPLOAD_MAX_MEMORY_SIZE', 'Not set')
+            debug_results.append(('📊 Upload Limit', f'{file_limit} bytes'))
+        except Exception as e:
+            debug_results.append(('❌ Settings Check', str(e)))
+        
+        # Test 4: Import Command Test
+        try:
+            from django.core.management import call_command
+            debug_results.append(('✅ Import Command', 'Available'))
+        except Exception as e:
+            debug_results.append(('❌ Import Command', str(e)))
+        
+        context = {
+            'title': 'Production Debug Report',
+            'debug_results': debug_results
+        }
+        return render(request, "admin/debug_production.html", context)
 
 
 class FarmAdmin(admin.ModelAdmin):
