@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Upload CSV File{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Upload Asset CSV File</h1>
+    
+    <div class="module aligned">
+        <h2>CSV Import Instructions</h2>
+        <p>Upload a CSV file containing asset data. The system will automatically:</p>
+        <ul>
+            <li>Create companies, locations, and farms if they don't exist</li>
+            <li>Import all asset data with specifications</li>
+            <li>Set up relationships between assets and farms</li>
+        </ul>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="aligned">
+        {% csrf_token %}
+        
+        <fieldset class="module aligned">
+            <h2>Select CSV File</h2>
+            
+            <div class="form-row">
+                {{ form.csv_file.label_tag }}
+                {{ form.csv_file }}
+                {% if form.csv_file.help_text %}
+                    <div class="help">{{ form.csv_file.help_text }}</div>
+                {% endif %}
+                {% if form.csv_file.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.csv_file.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Upload CSV" class="default" />
+            <a href="{% url 'admin:core_asset_changelist' %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

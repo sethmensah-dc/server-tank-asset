@@ -1,1 +1,1 @@
-DATABASE_URL=postgresql://tank_asset_user:tankAsset@localhost:5432/tank_asset
+export DATABASE_URL=postgresql://tank_asset_user:tankAsset@localhost:5432/tank_asset
