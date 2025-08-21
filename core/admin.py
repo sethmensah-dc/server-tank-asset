@@ -4,6 +4,10 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.management import call_command
 from django import forms
+from django.http import HttpResponse
+import zipfile
+import os
+import tempfile
 
 from .models import Asset, AssetType, Content, Farm, Location, Material, AssetEvents, Company, EventType, AssetModel
 
@@ -12,6 +16,26 @@ class CsvImportForm(forms.Form):
     csv_file = forms.FileField(
         label='Select CSV File',
         help_text='Upload a CSV file containing asset data'
+    )
+
+class CsvDirectoryImportForm(forms.Form):
+    csv_zip = forms.FileField(
+        label='Upload ZIP file containing CSV files',
+        help_text='Upload a ZIP file containing all CSV files (companies.csv, locations.csv, etc.)'
+    )
+    clear_existing = forms.BooleanField(
+        required=False,
+        label='Clear existing data',
+        help_text='WARNING: This will delete all existing data before importing'
+    )
+
+class DataManagementForm(forms.Form):
+    action = forms.ChoiceField(
+        choices=[
+            ('export', 'Export all data to CSV'),
+            ('import', 'Import data from ZIP file')
+        ],
+        widget=forms.RadioSelect
     )
 
 
@@ -49,6 +73,11 @@ class AssetAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.upload_csv),
                 name='core_asset_upload_csv',
             ),
+            path(
+                'data-management/',
+                self.admin_site.admin_view(self.data_management),
+                name='core_asset_data_management',
+            ),
         ]
         return custom_urls + urls
 
@@ -85,6 +114,89 @@ class AssetAdmin(admin.ModelAdmin):
         
         payload = {"form": form}
         return render(request, "admin/csv_form.html", payload)
+
+    def data_management(self, request):
+        if request.method == "POST":
+            if 'export' in request.POST:
+                return self.export_all_data(request)
+            elif 'import' in request.POST:
+                return self.import_csv_data(request)
+        
+        context = {
+            'title': 'Data Management',
+            'export_form': DataManagementForm(),
+            'import_form': CsvDirectoryImportForm()
+        }
+        return render(request, "admin/data_management.html", context)
+
+    def export_all_data(self, request):
+        """Export all data to a ZIP file containing CSV files"""
+        try:
+            # Create temporary directory
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Export data to CSV files
+                call_command('export_to_csv', output_dir=temp_dir)
+                
+                # Create ZIP file
+                zip_filename = 'tank_asset_data_export.zip'
+                response = HttpResponse(content_type='application/zip')
+                response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+                
+                with zipfile.ZipFile(response, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    for filename in os.listdir(temp_dir):
+                        if filename.endswith('.csv'):
+                            file_path = os.path.join(temp_dir, filename)
+                            zip_file.write(file_path, filename)
+                
+                messages.success(request, 'Data exported successfully!')
+                return response
+                
+        except Exception as e:
+            messages.error(request, f'Error exporting data: {str(e)}')
+            return redirect("admin:core_asset_data_management")
+
+    def import_csv_data(self, request):
+        """Import data from uploaded ZIP file"""
+        form = CsvDirectoryImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_zip = request.FILES["csv_zip"]
+            clear_existing = form.cleaned_data['clear_existing']
+            
+            # Validate file type
+            if not csv_zip.name.endswith('.zip'):
+                messages.error(request, 'File must be a ZIP file.')
+                return redirect("admin:core_asset_data_management")
+            
+            try:
+                # Create temporary directory
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    # Save and extract ZIP file
+                    zip_path = os.path.join(temp_dir, 'upload.zip')
+                    with open(zip_path, 'wb+') as destination:
+                        for chunk in csv_zip.chunks():
+                            destination.write(chunk)
+                    
+                    # Extract ZIP file
+                    extract_dir = os.path.join(temp_dir, 'extracted')
+                    with zipfile.ZipFile(zip_path, 'r') as zip_file:
+                        zip_file.extractall(extract_dir)
+                    
+                    # Import CSV files
+                    clear_flag = '--clear-existing' if clear_existing else ''
+                    if clear_flag:
+                        call_command('import_from_csv', csv_dir=extract_dir, clear_existing=True)
+                    else:
+                        call_command('import_from_csv', csv_dir=extract_dir)
+                    
+                    messages.success(
+                        request, 
+                        f'Successfully imported data from {csv_zip.name}'
+                    )
+                    
+            except Exception as e:
+                messages.error(request, f'Error importing data: {str(e)}')
+        
+        return redirect("admin:core_asset_data_management")
 
 
 class FarmAdmin(admin.ModelAdmin):

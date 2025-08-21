@@ -1,0 +1,838 @@
+openapi: 3.0.3
+info:
+  title: Tank Asset Management API
+  version: 1.0.0
+  description: API for managing tank farms, assets, and related data in oil & gas
+    facilities
+  contact:
+    name: Tank Asset API Team
+    email: api@tanksystem.com
+  license:
+    name: MIT License
+paths:
+  /:
+    get:
+      operationId: root_retrieve
+      description: Main entry point showing all available API endpoints and sample
+        data for testing.
+      summary: API Root
+      tags:
+      - API Root
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Available API endpoints and sample data
+  /browse/farms/:
+    get:
+      operationId: browse_farms_list
+      description: ViewSet for browsing farms with pagination, search, and filtering
+        capabilities.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Browse
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFarmList'
+          description: ''
+  /browse/farms/{farm_id}/:
+    get:
+      operationId: browse_farms_retrieve
+      description: ViewSet for browsing farms with pagination, search, and filtering
+        capabilities.
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: A unique value identifying this farm.
+        required: true
+      tags:
+      - Browse
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Farm'
+          description: ''
+  /browse/assets/:
+    get:
+      operationId: browse_assets_list
+      description: ViewSet for browsing assets with pagination, search, and filtering
+        capabilities.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Browse
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetList'
+          description: ''
+  /browse/assets/{asset_id}/:
+    get:
+      operationId: browse_assets_retrieve
+      description: ViewSet for browsing assets with pagination, search, and filtering
+        capabilities.
+      parameters:
+      - in: path
+        name: asset_id
+        schema:
+          type: string
+        description: A unique value identifying this asset.
+        required: true
+      tags:
+      - Browse
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+  /farm/{farm_id}/assets:
+    get:
+      operationId: farm_assets_retrieve
+      description: Retrieve all assets associated with a specific farm, including
+        their specifications, events, and location data.
+      summary: Get Farm Assets
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: Unique farm identifier (e.g., SYS-1D3407DB-F-13083)
+        required: true
+      tags:
+      - Farms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Farm assets retrieved successfully
+        '404':
+          description: Farm not found
+  /api/asset/{asset_id}:
+    get:
+      operationId: api_asset_retrieve
+      description: Retrieve detailed information for a specific asset including specifications,
+        events, and relationships.
+      summary: Get Asset Details
+      parameters:
+      - in: path
+        name: asset_id
+        schema:
+          type: string
+        description: Unique asset identifier (e.g., SYS-1D3407DB-F-13083-A-06527)
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetail'
+          description: ''
+        '404':
+          description: Asset not found
+  /api/asset-name/{asset_name}:
+    get:
+      operationId: api_asset_name_retrieve
+      description: Retrieve asset information using the asset name.
+      summary: Get Asset by Name
+      parameters:
+      - in: path
+        name: asset_name
+        schema:
+          type: string
+        description: Asset name (e.g., Tank A-001, Compressor 1)
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetail'
+          description: ''
+        '404':
+          description: Asset not found
+  /api/asset-model/{asset_type}:
+    get:
+      operationId: get_asset_type_model
+      description: Retrieve generic 3D model for an asset type (e.g., Compressor,
+        FixedRoofTank).
+      summary: Get Asset Type Model
+      parameters:
+      - in: path
+        name: asset_type
+        schema:
+          type: string
+        description: Asset type name (e.g., "Compressor", "FixedRoofTank", "ProcessPump")
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: 3D model file (.glb format)
+        '404':
+          description: Asset type model not found
+  /api/asset-type/{asset_type}:
+    get:
+      operationId: api_asset_type_retrieve
+      description: Retrieve all assets of a specific type. Can search by type ID or
+        name.
+      summary: Get Assets by Type
+      parameters:
+      - in: path
+        name: asset_type
+        schema:
+          type: string
+        description: Asset type ID or name (e.g., 1, "Fixed Roof Tank", "Compressor")
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: List of assets of the specified type
+  /api/asset-by-model/{model_id}:
+    get:
+      operationId: api_asset_by_model_retrieve
+      description: Retrieve asset information using the model ID.
+      summary: Get Asset by Model ID
+      parameters:
+      - in: path
+        name: model_id
+        schema:
+          type: string
+        description: Asset model identifier (e.g., oil_tank001, TANK-001)
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetail'
+          description: ''
+        '404':
+          description: Asset not found
+  /api/farm-model/{farm_id}:
+    get:
+      operationId: api_farm_model_retrieve
+      description: Retrieve 3D farm model file (.glb format) by farm ID.
+      summary: Get Farm Model File
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: Farm identifier (e.g., SYS-1D3407DB-F-13083)
+        required: true
+      tags:
+      - Farms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: 3D model file (.glb format)
+        '404':
+          description: Model file not found
+  /api/farm-site-model/{farm_id}/upload:
+    post:
+      operationId: api_farm_site_model_upload_create
+      description: Upload a 3D site model file (.glb) for overall farm layout.
+      summary: Upload Farm Site Model
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: Farm identifier (e.g., SYS-1D3407DB-F-13083)
+        required: true
+      tags:
+      - Farms
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                site_model_file:
+                  type: string
+                  format: binary
+                  description: 3D site model file (.glb format)
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Site model uploaded successfully
+        '400':
+          description: Invalid file or farm not found
+        '404':
+          description: Farm not found
+  /api/farm-layout-pdf/{farm_id}/upload:
+    post:
+      operationId: api_farm_layout_pdf_upload_create
+      description: Upload a 2D layout diagram (PDF) for the farm.
+      summary: Upload Farm Layout PDF
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: Farm identifier (e.g., SYS-1D3407DB-F-13083)
+        required: true
+      tags:
+      - Farms
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                layout_pdf:
+                  type: string
+                  format: binary
+                  description: Layout PDF file
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Layout PDF uploaded successfully
+        '400':
+          description: Invalid file or farm not found
+        '404':
+          description: Farm not found
+  /api/farm-layout/{farm_id}:
+    get:
+      operationId: api_farm_layout_retrieve
+      description: Download 2D farm layout diagram as PDF file.
+      summary: Get Farm Layout PDF
+      parameters:
+      - in: path
+        name: farm_id
+        schema:
+          type: string
+        description: Farm identifier (e.g., SYS-1F057E08-F-93E85)
+        required: true
+      tags:
+      - Farms
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: PDF layout file
+        '404':
+          description: Layout not found
+  /api/asset-model/{asset_id}/upload:
+    post:
+      operationId: api_asset_model_upload_create
+      description: Upload a 3D model file (.glb) for a specific asset.
+      summary: Upload Asset Model
+      parameters:
+      - in: path
+        name: asset_id
+        schema:
+          type: string
+        description: Asset identifier (e.g., SYS-1D3407DB-F-13083-A-06527)
+        required: true
+      tags:
+      - Assets
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                model_file:
+                  type: string
+                  format: binary
+                  description: 3D model file (.glb format)
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: Asset model uploaded successfully
+        '400':
+          description: Invalid file or asset not found
+        '404':
+          description: Asset not found
+  /api/asset/{asset_id}/model:
+    get:
+      operationId: get_asset_model_file
+      description: Retrieve 3D model file (.glb format) for a specific asset.
+      summary: Get Asset Model File
+      parameters:
+      - in: path
+        name: asset_id
+        schema:
+          type: string
+        description: Asset identifier (e.g., SYS-1D3407DB-F-13083-A-06527)
+        required: true
+      tags:
+      - Assets
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: 3D model file (.glb format)
+        '404':
+          description: Asset model not found
+components:
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          maxLength: 50
+        model_id:
+          type: string
+          nullable: true
+          maxLength: 100
+        health:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        type:
+          allOf:
+          - $ref: '#/components/schemas/AssetType'
+          readOnly: true
+        location:
+          allOf:
+          - $ref: '#/components/schemas/Location'
+          readOnly: true
+        installation_date:
+          type: string
+          format: date-time
+          nullable: true
+        manufactured_date:
+          type: string
+          format: date-time
+          nullable: true
+        commission_date:
+          type: string
+          format: date-time
+          nullable: true
+        decommission_date:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        capacity:
+          type: number
+          format: double
+          nullable: true
+        current_volume:
+          type: number
+          format: double
+          nullable: true
+        diameter:
+          type: number
+          format: double
+          nullable: true
+        height:
+          type: number
+          format: double
+          nullable: true
+        material_name:
+          type: string
+          readOnly: true
+        content_name:
+          type: string
+          readOnly: true
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetEvent'
+          readOnly: true
+      required:
+      - content_name
+      - events
+      - id
+      - location
+      - material_name
+      - name
+      - status
+      - type
+    AssetDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        health:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        type:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          maxLength: 50
+        model_id:
+          type: string
+          nullable: true
+          maxLength: 100
+        farm:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        location:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        dates:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        specifications:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        related_assets:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+      required:
+      - dates
+      - events
+      - farm
+      - id
+      - location
+      - name
+      - related_assets
+      - specifications
+      - status
+      - type
+    AssetEvent:
+      type: object
+      properties:
+        event_id:
+          type: string
+          maxLength: 200
+        title:
+          type: string
+          maxLength: 120
+        type_id:
+          type: integer
+          readOnly: true
+        start_date:
+          type: string
+          format: date-time
+          nullable: true
+        end_date:
+          type: string
+          format: date-time
+          nullable: true
+        event_status:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+        performed_by:
+          type: string
+          nullable: true
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+        cost:
+          type: string
+          nullable: true
+          maxLength: 50
+      required:
+      - event_id
+      - event_status
+      - title
+      - type_id
+    AssetType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+          maxLength: 10
+      required:
+      - id
+      - name
+    Farm:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        company_id:
+          type: string
+          maxLength: 200
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+        location:
+          allOf:
+          - $ref: '#/components/schemas/Location'
+          readOnly: true
+      required:
+      - company_id
+      - id
+      - location
+      - name
+      - status
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        address:
+          type: string
+          nullable: true
+          maxLength: 200
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        country:
+          type: string
+          nullable: true
+          maxLength: 50
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        state:
+          type: string
+          nullable: true
+          maxLength: 100
+      required:
+      - id
+      - name
+    PaginatedAssetList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+    PaginatedFarmList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Farm'
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+tags:
+- name: Farms
+  description: Farm management and asset listing
+- name: Assets
+  description: Individual asset details and specifications
+- name: Browse
+  description: Paginated browsing of farms and assets

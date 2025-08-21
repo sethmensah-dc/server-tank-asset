@@ -1,0 +1,144 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Data Management{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:core_asset_changelist' %}">Assets</a>
+    &rsaquo; Data Management
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Data Management</h1>
+
+<div class="module aligned">
+    <h2>Export Data</h2>
+    <p>Export all tank asset data to CSV files for backup or migration to production.</p>
+    
+    <form method="post" class="aligned">
+        {% csrf_token %}
+        <div class="form-row">
+            <div>
+                <button type="submit" name="export" class="default" onclick="return confirm('This will export all data to a ZIP file. Continue?')">
+                    📥 Export All Data to ZIP
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<br>
+
+<div class="module aligned">
+    <h2>Import Data</h2>
+    <p>Import tank asset data from a ZIP file containing CSV files. This is useful for setting up production environments.</p>
+    
+    <form method="post" enctype="multipart/form-data" class="aligned">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            {{ import_form.csv_zip.label_tag }}
+            <div>
+                {{ import_form.csv_zip }}
+                {% if import_form.csv_zip.help_text %}
+                    <div class="help">{{ import_form.csv_zip.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            {{ import_form.clear_existing.label_tag }}
+            <div>
+                {{ import_form.clear_existing }}
+                {% if import_form.clear_existing.help_text %}
+                    <div class="help" style="color: red; font-weight: bold;">{{ import_form.clear_existing.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <button type="submit" name="import" class="default" onclick="return confirm('This will import data from the ZIP file. If \\'Clear existing data\\' is checked, ALL CURRENT DATA WILL BE DELETED. Are you sure?')">
+                    📤 Import Data from ZIP
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<br>
+
+<div class="module">
+    <h2>Instructions</h2>
+    <h3>For Production Setup:</h3>
+    <ol>
+        <li><strong>Export from Development:</strong> Use the "Export All Data to ZIP" button to download all data</li>
+        <li><strong>Transfer to Production:</strong> Copy the ZIP file to your production server</li>
+        <li><strong>Import to Production:</strong> Use the "Import Data from ZIP" function with "Clear existing data" checked</li>
+        <li><strong>Upload Model Files:</strong> Copy the static/uploads/model_categories/ folder to production</li>
+    </ol>
+    
+    <h3>Expected ZIP Contents:</h3>
+    <ul>
+        <li>companies.csv - Company information</li>
+        <li>locations.csv - Geographic locations</li>
+        <li>farms.csv - Farm/site information</li>
+        <li>asset_types.csv - Asset type definitions</li>
+        <li>materials.csv - Material types</li>
+        <li>contents.csv - Content types</li>
+        <li>event_types.csv - Event type definitions</li>
+        <li>assets.csv - Asset inventory data</li>
+        <li>asset_events.csv - Asset maintenance/event history</li>
+    </ul>
+</div>
+
+<style>
+.module {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10px 0;
+    padding: 20px;
+}
+
+.module h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.form-row {
+    margin: 15px 0;
+}
+
+.form-row label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.help {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+}
+
+button.default {
+    background: #417690;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+button.default:hover {
+    background: #205067;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,9 @@
+id,name,description,code
+1,Fixed Roof Tank,Atmospheric storage tank with fixed roof,FRT
+2,Floating Roof Tank,Storage tank with floating roof to minimize emissions,FRO
+3,Spherical Tank,Pressurized storage vessel for LPG and other gases,SPH
+4,Process Pump,Centrifugal pump for fluid transfer,PMP
+5,Control Valve,Globe valve for flow control,CV
+6,Pipeline,Carbon steel pipeline for product transfer,PL
+7,Heat Exchanger,Shell and tube heat exchanger,HX
+8,Compressor,Reciprocating compressor for gas transfer,CMP
