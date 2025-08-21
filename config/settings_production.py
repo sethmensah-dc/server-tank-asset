@@ -157,7 +157,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Require authentication
+        'rest_framework.permissions.AllowAny',  # Allow public access for demo
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -198,7 +198,7 @@ SPECTACULAR_SETTINGS = {
     ],
     'COMPONENT_SPLIT_REQUEST': True,
     'SORT_OPERATIONS': False,
-    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],  # Protect docs
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],  # Public docs access
 }
 
 # Logging Configuration
