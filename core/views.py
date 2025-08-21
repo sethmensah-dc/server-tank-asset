@@ -235,13 +235,13 @@ def get_assets_by_type(request, asset_type):
 @extend_schema(
     tags=['Farms'],
     summary='Get Farm Model File',
-    description='Retrieve 3D farm model file (.glb format) by model ID.',
+    description='Retrieve 3D farm model file (.glb format) by farm ID.',
     parameters=[
         OpenApiParameter(
-            name='model_id',
+            name='farm_id',
             type=OpenApiTypes.STR,
             location=OpenApiParameter.PATH,
-            description='Farm model identifier (e.g., SYS-1D3407DB-F-13083)',
+            description='Farm identifier (e.g., SYS-1D3407DB-F-13083)',
             required=True
         )
     ],
@@ -251,14 +251,14 @@ def get_assets_by_type(request, asset_type):
     }
 )
 @api_view(['GET'])
-def get_farm_model(request, model_id):
+def get_farm_model(request, farm_id):
     """
     Get farm 3D model file
-    URL: /api/farm-model/{model_id}
+    URL: /api/farm-model/{farm_id}
     """
     # First try to find farm by farm_id and check if it has a site_model_file
     try:
-        farm = Farm.objects.get(farm_id=model_id)
+        farm = Farm.objects.get(farm_id=farm_id)
         if farm.site_model_file and farm.site_model_file.name:
             # Serve from Django's file field (MEDIA_ROOT)
             from django.http import FileResponse
@@ -267,16 +267,16 @@ def get_farm_model(request, model_id):
             response = FileResponse(
                 farm.site_model_file.open('rb'),
                 content_type='model/gltf-binary',
-                filename=smart_str(farm.site_model_file_name or f"{model_id}.glb")
+                filename=smart_str(farm.site_model_file_name or f"{farm_id}.glb")
             )
-            response['Content-Disposition'] = f'inline; filename="{farm.site_model_file_name or f"{model_id}.glb"}"'
+            response['Content-Disposition'] = f'inline; filename="{farm.site_model_file_name or f"{farm_id}.glb"}"'
             return response
     except Farm.DoesNotExist:
         pass
     
     # Fallback to legacy filesystem approach for backward compatibility
     models_directory = os.path.join(settings.BASE_DIR, 'static', 'uploads', 'farm_models')
-    filename = f"{model_id}.glb"
+    filename = f"{farm_id}.glb"
     file_path = os.path.join(models_directory, filename)
     
     if not os.path.exists(file_path):
@@ -527,6 +527,7 @@ def upload_asset_model(request, asset_id):
 
 @extend_schema(
     tags=['Assets'],
+    operation_id='get_asset_model_file',
     summary='Get Asset Model File',
     description='Retrieve 3D model file (.glb format) for a specific asset.',
     parameters=[
@@ -570,6 +571,7 @@ def get_asset_model_file(request, asset_id):
 
 @extend_schema(
     tags=['Assets'],
+    operation_id='get_asset_type_model',
     summary='Get Asset Type Model',
     description='Retrieve generic 3D model for an asset type (e.g., Compressor, FixedRoofTank).',
     parameters=[
