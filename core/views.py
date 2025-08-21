@@ -256,20 +256,20 @@ def get_farm_model(request, model_id):
     Get farm 3D model file
     URL: /api/farm-model/{model_id}
     """
-    # First try to find farm by farm_id and check if it has a model_file
+    # First try to find farm by farm_id and check if it has a site_model_file
     try:
         farm = Farm.objects.get(farm_id=model_id)
-        if farm.model_file and farm.model_file.name:
+        if farm.site_model_file and farm.site_model_file.name:
             # Serve from Django's file field (MEDIA_ROOT)
             from django.http import FileResponse
             from django.utils.encoding import smart_str
             
             response = FileResponse(
-                farm.model_file.open('rb'),
+                farm.site_model_file.open('rb'),
                 content_type='model/gltf-binary',
-                filename=smart_str(farm.model_file_name or f"{model_id}.glb")
+                filename=smart_str(farm.site_model_file_name or f"{model_id}.glb")
             )
-            response['Content-Disposition'] = f'inline; filename="{farm.model_file_name or f"{model_id}.glb"}"'
+            response['Content-Disposition'] = f'inline; filename="{farm.site_model_file_name or f"{model_id}.glb"}"'
             return response
     except Farm.DoesNotExist:
         pass
@@ -339,8 +339,8 @@ def get_farm_layout_pdf(request, farm_id):
 
 @extend_schema(
     tags=['Farms'],
-    summary='Upload Farm Model',
-    description='Upload a 3D model file (.glb) for a specific farm.',
+    summary='Upload Farm Site Model',
+    description='Upload a 3D site model file (.glb) for overall farm layout.',
     parameters=[
         OpenApiParameter(
             name='farm_id',
@@ -354,26 +354,150 @@ def get_farm_layout_pdf(request, farm_id):
         'multipart/form-data': {
             'type': 'object',
             'properties': {
-                'model_file': {'type': 'string', 'format': 'binary', 'description': '3D model file (.glb format)'}
+                'site_model_file': {'type': 'string', 'format': 'binary', 'description': '3D site model file (.glb format)'}
             }
         }
     },
     responses={
-        200: OpenApiResponse(description='Model uploaded successfully'),
+        200: OpenApiResponse(description='Site model uploaded successfully'),
         400: OpenApiResponse(description='Invalid file or farm not found'),
         404: OpenApiResponse(description='Farm not found')
     }
 )
 @api_view(['POST'])
-def upload_farm_model(request, farm_id):
+def upload_farm_site_model(request, farm_id):
     """
-    Upload 3D model file for a farm
-    URL: /api/farm-model/{farm_id}/upload
+    Upload 3D site model file for a farm (overall layout)
+    URL: /api/farm-site-model/{farm_id}/upload
     """
     try:
         farm = get_object_or_404(Farm, farm_id=farm_id)
     except Farm.DoesNotExist:
         return Response({'error': 'Farm not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if 'site_model_file' not in request.FILES:
+        return Response({'error': 'No site model file provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    model_file = request.FILES['site_model_file']
+    
+    # Validate file extension
+    if not model_file.name.lower().endswith('.glb'):
+        return Response({'error': 'Only .glb files are allowed'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Save the file to the farm
+    from django.utils import timezone
+    farm.site_model_file = model_file
+    farm.site_model_file_name = model_file.name
+    farm.site_model_uploaded_at = timezone.now()
+    farm.save()
+    
+    return Response({
+        'message': 'Site model uploaded successfully',
+        'farm_id': farm.farm_id,
+        'farm_name': farm.name,
+        'file_name': farm.site_model_file_name,
+        'file_size': farm.site_model_file.size,
+        'uploaded_at': farm.site_model_uploaded_at
+    })
+
+
+@extend_schema(
+    tags=['Farms'],
+    summary='Upload Farm Layout PDF',
+    description='Upload a 2D layout diagram (PDF) for the farm.',
+    parameters=[
+        OpenApiParameter(
+            name='farm_id',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.PATH,
+            description='Farm identifier (e.g., SYS-1D3407DB-F-13083)',
+            required=True
+        )
+    ],
+    request={
+        'multipart/form-data': {
+            'type': 'object',
+            'properties': {
+                'layout_pdf': {'type': 'string', 'format': 'binary', 'description': 'Layout PDF file'}
+            }
+        }
+    },
+    responses={
+        200: OpenApiResponse(description='Layout PDF uploaded successfully'),
+        400: OpenApiResponse(description='Invalid file or farm not found'),
+        404: OpenApiResponse(description='Farm not found')
+    }
+)
+@api_view(['POST'])
+def upload_farm_layout_pdf(request, farm_id):
+    """
+    Upload layout PDF for a farm
+    URL: /api/farm-layout-pdf/{farm_id}/upload
+    """
+    try:
+        farm = get_object_or_404(Farm, farm_id=farm_id)
+    except Farm.DoesNotExist:
+        return Response({'error': 'Farm not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if 'layout_pdf' not in request.FILES:
+        return Response({'error': 'No layout PDF file provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    pdf_file = request.FILES['layout_pdf']
+    
+    # Validate file extension
+    if not pdf_file.name.lower().endswith('.pdf'):
+        return Response({'error': 'Only .pdf files are allowed'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Save the file to the farm
+    farm.layout_pdf = pdf_file
+    farm.save()
+    
+    return Response({
+        'message': 'Layout PDF uploaded successfully',
+        'farm_id': farm.farm_id,
+        'farm_name': farm.name,
+        'file_name': pdf_file.name,
+        'file_size': pdf_file.size
+    })
+
+
+@extend_schema(
+    tags=['Assets'],
+    summary='Upload Asset Model',
+    description='Upload a 3D model file (.glb) for a specific asset.',
+    parameters=[
+        OpenApiParameter(
+            name='asset_id',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.PATH,
+            description='Asset identifier (e.g., SYS-1D3407DB-F-13083-A-06527)',
+            required=True
+        )
+    ],
+    request={
+        'multipart/form-data': {
+            'type': 'object',
+            'properties': {
+                'model_file': {'type': 'string', 'format': 'binary', 'description': '3D model file (.glb format)'}
+            }
+        }
+    },
+    responses={
+        200: OpenApiResponse(description='Asset model uploaded successfully'),
+        400: OpenApiResponse(description='Invalid file or asset not found'),
+        404: OpenApiResponse(description='Asset not found')
+    }
+)
+@api_view(['POST'])
+def upload_asset_model(request, asset_id):
+    """
+    Upload 3D model file for a specific asset
+    URL: /api/asset-model/{asset_id}/upload
+    """
+    try:
+        asset = get_object_or_404(Asset, asset_id=asset_id)
+    except Asset.DoesNotExist:
+        return Response({'error': 'Asset not found'}, status=status.HTTP_404_NOT_FOUND)
     
     if 'model_file' not in request.FILES:
         return Response({'error': 'No model file provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -384,21 +508,64 @@ def upload_farm_model(request, farm_id):
     if not model_file.name.lower().endswith('.glb'):
         return Response({'error': 'Only .glb files are allowed'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Save the file to the farm
+    # Save the file to the asset
     from django.utils import timezone
-    farm.model_file = model_file
-    farm.model_file_name = model_file.name
-    farm.model_uploaded_at = timezone.now()
-    farm.save()
+    asset.model_file = model_file
+    asset.model_file_name = model_file.name
+    asset.model_uploaded_at = timezone.now()
+    asset.save()
     
     return Response({
-        'message': 'Model uploaded successfully',
-        'farm_id': farm.farm_id,
-        'farm_name': farm.name,
-        'file_name': farm.model_file_name,
-        'file_size': farm.model_file.size,
-        'uploaded_at': farm.model_uploaded_at
+        'message': 'Asset model uploaded successfully',
+        'asset_id': asset.asset_id,
+        'asset_name': asset.name,
+        'file_name': asset.model_file_name,
+        'file_size': asset.model_file.size,
+        'uploaded_at': asset.model_uploaded_at
     })
+
+
+@extend_schema(
+    tags=['Assets'],
+    summary='Get Asset Model File',
+    description='Retrieve 3D model file (.glb format) for a specific asset.',
+    parameters=[
+        OpenApiParameter(
+            name='asset_id',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.PATH,
+            description='Asset identifier (e.g., SYS-1D3407DB-F-13083-A-06527)',
+            required=True
+        )
+    ],
+    responses={
+        200: OpenApiResponse(description='3D model file (.glb format)'),
+        404: OpenApiResponse(description='Asset model not found')
+    }
+)
+@api_view(['GET'])
+def get_asset_model_file(request, asset_id):
+    """
+    Get asset 3D model file
+    URL: /api/asset/{asset_id}/model
+    """
+    try:
+        asset = Asset.objects.get(asset_id=asset_id)
+        if asset.model_file and asset.model_file.name:
+            from django.http import FileResponse
+            from django.utils.encoding import smart_str
+            
+            response = FileResponse(
+                asset.model_file.open('rb'),
+                content_type='model/gltf-binary',
+                filename=smart_str(asset.model_file_name or f"{asset_id}.glb")
+            )
+            response['Content-Disposition'] = f'inline; filename="{asset.model_file_name or f"{asset_id}.glb"}"'
+            return response
+    except Asset.DoesNotExist:
+        pass
+    
+    return Response({'error': 'Asset model not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @extend_schema(

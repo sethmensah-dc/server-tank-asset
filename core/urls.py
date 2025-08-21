@@ -26,6 +26,11 @@ urlpatterns = [
     
     # Farm model endpoints
     path('api/farm-model/<str:model_id>', views.get_farm_model, name='farm_model'),
-    path('api/farm-model/<str:farm_id>/upload', views.upload_farm_model, name='farm_model_upload'),
+    path('api/farm-site-model/<str:farm_id>/upload', views.upload_farm_site_model, name='farm_site_model_upload'),
+    path('api/farm-layout-pdf/<str:farm_id>/upload', views.upload_farm_layout_pdf, name='farm_layout_pdf_upload'),
     path('api/farm-layout/<str:farm_id>', views.get_farm_layout_pdf, name='farm_layout_pdf'),
+    
+    # Asset model endpoints
+    path('api/asset-model/<str:asset_id>/upload', views.upload_asset_model, name='asset_model_upload'),
+    path('api/asset/<str:asset_id>/model', views.get_asset_model_file, name='asset_model_file'),
 ]

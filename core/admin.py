@@ -16,10 +16,30 @@ class CsvImportForm(forms.Form):
 
 
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ['asset_id', 'name', 'asset_type', 'status', 'farm', 'location']
+    list_display = ['asset_id', 'name', 'asset_type', 'status', 'farm', 'location', 'has_model_file']
     list_filter = ['status', 'asset_type', 'farm']
     search_fields = ['asset_id', 'name', 'description']
     list_per_page = 50
+    
+    fields = ['asset_id', 'company_id', 'location', 'farm', 'name', 'asset_type', 'description',
+              'installation_date', 'manufactured_date', 'commission_date', 'decommission_date', 
+              'status', 'latitude', 'longitude', 'health',
+              'capacity', 'model_id', 'current_volume', 'diameter', 'height',
+              'model_file', 'model_file_name', 'model_uploaded_at',
+              'material', 'content']
+    readonly_fields = ['asset_id', 'model_uploaded_at']
+    
+    def has_model_file(self, obj):
+        return bool(obj.model_file)
+    has_model_file.boolean = True
+    has_model_file.short_description = 'Has 3D Model'
+    
+    def save_model(self, request, obj, form, change):
+        if 'model_file' in form.changed_data and obj.model_file:
+            from django.utils import timezone
+            obj.model_file_name = obj.model_file.name
+            obj.model_uploaded_at = timezone.now()
+        super().save_model(request, obj, form, change)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -68,24 +88,24 @@ class AssetAdmin(admin.ModelAdmin):
 
 
 class FarmAdmin(admin.ModelAdmin):
-    list_display = ['farm_id', 'name', 'company_id', 'status', 'location', 'has_model_file']
+    list_display = ['farm_id', 'name', 'company_id', 'status', 'location', 'has_site_model']
     list_filter = ['status', 'company_id']
     search_fields = ['farm_id', 'name', 'description']
     
     fields = ['farm_id', 'company_id', 'location', 'name', 'description', 'status', 
-              'operational_since', 'model_file', 'model_file_name', 'model_uploaded_at']
-    readonly_fields = ['farm_id', 'model_uploaded_at']
+              'operational_since', 'layout_pdf', 'site_model_file', 'site_model_file_name', 'site_model_uploaded_at']
+    readonly_fields = ['farm_id', 'site_model_uploaded_at']
     
-    def has_model_file(self, obj):
-        return bool(obj.model_file)
-    has_model_file.boolean = True
-    has_model_file.short_description = 'Has 3D Model'
+    def has_site_model(self, obj):
+        return bool(obj.site_model_file)
+    has_site_model.boolean = True
+    has_site_model.short_description = 'Has Site Model'
     
     def save_model(self, request, obj, form, change):
-        if 'model_file' in form.changed_data and obj.model_file:
+        if 'site_model_file' in form.changed_data and obj.site_model_file:
             from django.utils import timezone
-            obj.model_file_name = obj.model_file.name
-            obj.model_uploaded_at = timezone.now()
+            obj.site_model_file_name = obj.site_model_file.name
+            obj.site_model_uploaded_at = timezone.now()
         super().save_model(request, obj, form, change)
 
 

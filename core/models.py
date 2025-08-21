@@ -164,10 +164,26 @@ class Farm(models.Model):
     created_at = models.DateTimeField(default=now)
     operational_since = models.DateField(blank=True, null=True)
     
-    # 3D Model fields
-    model_file = models.FileField(upload_to='farm_models/', blank=True, null=True)
-    model_file_name = models.CharField(max_length=255, blank=True, null=True, help_text="Original filename")
-    model_uploaded_at = models.DateTimeField(blank=True, null=True)
+    # Farm layout files (site overview, not individual asset models)
+    layout_pdf = models.FileField(
+        upload_to='farm_layouts/', 
+        blank=True, 
+        null=True,
+        help_text="2D farm layout diagram (PDF format)"
+    )
+    site_model_file = models.FileField(
+        upload_to='farm_site_models/', 
+        blank=True, 
+        null=True,
+        help_text="3D site model showing overall farm layout (.glb format)"
+    )
+    site_model_file_name = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        help_text="Original filename of the site model"
+    )
+    site_model_uploaded_at = models.DateTimeField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Mimic SQLAlchemy before_insert: <company_id>-F-<5char>
@@ -230,6 +246,21 @@ class Asset(models.Model):
     current_volume = models.FloatField(blank=True, null=True)
     diameter = models.FloatField(blank=True, null=True)
     height = models.FloatField(blank=True, null=True)
+    
+    # Individual asset 3D model file
+    model_file = models.FileField(
+        upload_to='asset_models/', 
+        blank=True, 
+        null=True,
+        help_text="3D model file (.glb format) for this specific asset"
+    )
+    model_file_name = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        help_text="Original filename of the 3D model"
+    )
+    model_uploaded_at = models.DateTimeField(blank=True, null=True)
 
     material = models.ForeignKey(
         Material, on_delete=models.SET_NULL, null=True, related_name="assets"
