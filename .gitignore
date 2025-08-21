@@ -157,6 +157,11 @@ Thumbs.db
 
 # Project specific
 uploads/
+# Allow 3D model files for now
+!static/uploads/
+!static/uploads/model_categories/
+!static/uploads/farm_models/
+!static/uploads/**/*.glb
 logs/
 *.log
 

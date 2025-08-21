@@ -22,6 +22,8 @@ DEBUG = True
 # Add your domain names here
 ALLOWED_HOSTS = [
     "server-tank-asset.onrender.com",
+    "localhost",
+    "127.0.0.1",
 ]
 
 # Application definition
@@ -75,7 +77,7 @@ DATABASES = {
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         conn_health_checks=True,
-        ssl_require=True,  # Require SSL for production
+        ssl_require=False,  # Disable SSL for local development
     )
 }
 
@@ -127,7 +129,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False  # Disable for local development
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = 'DENY'

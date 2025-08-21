@@ -125,26 +125,6 @@ class Content(models.Model):
         return self.name
 
 
-class AssetModel(models.Model):
-    """
-    Generic 3D models for asset types - used as templates/placeholders
-    """
-    class Meta:
-        db_table = "asset_models"
-        unique_together = ['asset_type', 'is_default']  # Only one default per asset type
-    
-    id = models.AutoField(primary_key=True)
-    asset_type = models.ForeignKey(
-        AssetType, on_delete=models.CASCADE, related_name="models"
-    )
-    name = models.CharField(max_length=100, help_text="Display name (e.g., 'Standard Fixed Roof Tank')")
-    model_file = models.FileField(upload_to='model_categories/', help_text="3D model file (.glb format)")
-    is_default = models.BooleanField(default=False, help_text="Default model for this asset type")
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(default=now)
-    
-    def __str__(self) -> str:
-        return f"{self.asset_type.name} - {self.name}"
 
 
 # --- Farm + Asset domain ------------------------------------------------------
@@ -164,26 +144,6 @@ class Farm(models.Model):
     created_at = models.DateTimeField(default=now)
     operational_since = models.DateField(blank=True, null=True)
     
-    # Farm layout files (site overview, not individual asset models)
-    layout_pdf = models.FileField(
-        upload_to='farm_layouts/', 
-        blank=True, 
-        null=True,
-        help_text="2D farm layout diagram (PDF format)"
-    )
-    site_model_file = models.FileField(
-        upload_to='farm_site_models/', 
-        blank=True, 
-        null=True,
-        help_text="3D site model showing overall farm layout (.glb format)"
-    )
-    site_model_file_name = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
-        help_text="Original filename of the site model"
-    )
-    site_model_uploaded_at = models.DateTimeField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Mimic SQLAlchemy before_insert: <company_id>-F-<5char>
@@ -247,20 +207,6 @@ class Asset(models.Model):
     diameter = models.FloatField(blank=True, null=True)
     height = models.FloatField(blank=True, null=True)
     
-    # Individual asset 3D model file
-    model_file = models.FileField(
-        upload_to='asset_models/', 
-        blank=True, 
-        null=True,
-        help_text="3D model file (.glb format) for this specific asset"
-    )
-    model_file_name = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
-        help_text="Original filename of the 3D model"
-    )
-    model_uploaded_at = models.DateTimeField(blank=True, null=True)
 
     material = models.ForeignKey(
         Material, on_delete=models.SET_NULL, null=True, related_name="assets"
