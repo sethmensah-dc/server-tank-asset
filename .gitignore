@@ -139,6 +139,9 @@ static/rest_framework/
 *.sqlite
 *.sqlite3
 
+# Allow production data import file
+!asset_warehouse.db
+
 # IDE
 .vscode/
 .idea/

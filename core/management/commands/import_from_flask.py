@@ -5,6 +5,7 @@ Usage: python manage.py import_from_flask --flask-db path/to/flask.db
 """
 
 import sqlite3
+from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from core.models import (
@@ -15,6 +16,33 @@ from core.models import (
 
 class Command(BaseCommand):
     help = 'Import data directly from Flask SQLite database'
+    
+    def parse_date(self, date_str):
+        """Parse date from various formats to YYYY-MM-DD"""
+        if not date_str:
+            return None
+        
+        # Try MM/DD/YYYY format first
+        try:
+            return datetime.strptime(date_str, '%m/%d/%Y').date()
+        except ValueError:
+            pass
+            
+        # Try YYYY-MM-DD format
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+            
+        # Try with time component
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S.%f').date()
+        except ValueError:
+            pass
+            
+        # If all fails, return None
+        self.stdout.write(f'⚠️  Could not parse date: {date_str}')
+        return None
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -242,10 +270,10 @@ class Command(BaseCommand):
                 name=row['name'],
                 asset_type=asset_type,
                 description=row['description'] or '',
-                installation_date=row['installation_date'],
-                manufactured_date=row['manufactured_date'],
-                commission_date=row['commission_date'],
-                decommission_date=row['decommission_date'],
+                installation_date=self.parse_date(row['installation_date']),
+                manufactured_date=self.parse_date(row['manufactured_date']),
+                commission_date=self.parse_date(row['commission_date']),
+                decommission_date=self.parse_date(row['decommission_date']),
                 status=row['status'],
                 created_at=row['created_at'],
                 latitude=row['latitude'],
