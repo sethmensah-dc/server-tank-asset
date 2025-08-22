@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
+from django.core.management import call_command
 from rest_framework.reverse import reverse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from drf_spectacular.types import OpenApiTypes
@@ -180,8 +181,17 @@ def get_farm_model(request, farm_id):
     return response
 
 
-
-
+@api_view(['POST'])
+def import_flask_data(request):
+    """
+    Temporary endpoint to import Flask data in production
+    DELETE THIS AFTER IMPORT!
+    """
+    try:
+        call_command('import_from_flask', flask_db='flask_data.db', clear_existing=True)
+        return Response({'success': 'Data imported successfully'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 
