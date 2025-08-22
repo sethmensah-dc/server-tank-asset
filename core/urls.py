@@ -10,5 +10,4 @@ urlpatterns = [
     path('api/asset/<str:asset_id>', views.get_asset_details, name='asset_details'),
     path('api/asset-model/<str:asset_type>', views.get_asset_type_model, name='asset_type_model'),
     path('api/farm-model/<str:farm_id>', views.get_farm_model, name='farm_model'),
-    path('import-data/', views.import_flask_data, name='import_data'),  # TEMPORARY
 ]

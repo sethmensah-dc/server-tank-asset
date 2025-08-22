@@ -181,17 +181,6 @@ def get_farm_model(request, farm_id):
     return response
 
 
-@api_view(['POST'])
-def import_flask_data(request):
-    """
-    Temporary endpoint to import Flask data in production
-    DELETE THIS AFTER IMPORT!
-    """
-    try:
-        call_command('import_from_flask', flask_db='flask_data.db', clear_existing=True)
-        return Response({'success': 'Data imported successfully'})
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
 
 
 
